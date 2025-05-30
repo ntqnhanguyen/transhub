@@ -50,11 +50,16 @@ export default function Teams() {
         .select(`
           *,
           team_members (
+            id,
             user_id,
             role,
-            user_profiles (
-              full_name,
-              avatar_url
+            users:user_id (
+              id,
+              email,
+              user_profiles!inner (
+                full_name,
+                avatar_url
+              )
             )
           ),
           team_invitations (
@@ -216,13 +221,13 @@ export default function Teams() {
                   <h4 className="text-sm font-medium mb-2">Members</h4>
                   <div className="space-y-2">
                     {team.team_members.map((member: any) => (
-                      <div key={member.user_id} className="flex items-center justify-between">
+                      <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user_profiles.full_name[0]}
+                            {member.users.user_profiles.full_name[0]}
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm font-medium">{member.user_profiles.full_name}</p>
+                            <p className="text-sm font-medium">{member.users.user_profiles.full_name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>
                         </div>

@@ -41,7 +41,7 @@ export default function Dashboard() {
             team_members!inner(user_id),
             documents(count)
           `)
-          .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
+          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
           .order('created_at', { ascending: false });
 
         // Fetch recent documents
@@ -56,25 +56,37 @@ export default function Dashboard() {
             ),
             translations(count)
           `)
-          .or(`projects.owner_id.eq."${user.id}",projects.team_members.user_id.eq."${user.id}"`)
+          .or(`projects.owner_id.eq.${user.id},projects.team_members.user_id.eq.${user.id}`)
           .order('updated_at', { ascending: false })
           .limit(5);
 
-        // Fetch team activity
+        // First get all projects where the user is involved
+        const { data: userProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`);
+
+        const projectIds = userProjects?.map(p => p.id) || [];
+
+        // Then fetch team members for those projects
         const { data: teamMembers } = await supabase
           .from('team_members')
           .select(`
             *,
-            user_profiles!inner(
-              full_name,
-              avatar_url
-            ),
-            projects!inner(
+            projects:project_id (
               name,
               owner_id
+            ),
+            users:user_id (
+              id,
+              email,
+              user_profiles!inner (
+                full_name,
+                avatar_url
+              )
             )
           `)
-          .or(`user_id.eq."${user.id}",projects.owner_id.eq."${user.id}"`)
+          .in('project_id', projectIds)
           .order('updated_at', { ascending: false })
           .limit(4);
 
