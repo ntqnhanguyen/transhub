@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
