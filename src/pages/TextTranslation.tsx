@@ -14,18 +14,18 @@ export default function TextTranslation() {
   const { user } = useAuth();
   
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Spanish' },
-    { code: 'fr', name: 'French' },
-    { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' },
-    { code: 'pt', name: 'Portuguese' },
-    { code: 'ru', name: 'Russian' },
-    { code: 'zh', name: 'Chinese' },
-    { code: 'ja', name: 'Japanese' },
-    { code: 'ko', name: 'Korean' },
-    { code: 'ar', name: 'Arabic' },
-    { code: 'vi', name: 'Vietnamese' }  // Added Vietnamese support
+    { code: 'en', name: 'English', flag: 'gb' },
+    { code: 'es', name: 'Spanish', flag: 'es' },
+    { code: 'fr', name: 'French', flag: 'fr' },
+    { code: 'de', name: 'German', flag: 'de' },
+    { code: 'it', name: 'Italian', flag: 'it' },
+    { code: 'pt', name: 'Portuguese', flag: 'pt' },
+    { code: 'ru', name: 'Russian', flag: 'ru' },
+    { code: 'zh', name: 'Chinese', flag: 'cn' },
+    { code: 'ja', name: 'Japanese', flag: 'jp' },
+    { code: 'ko', name: 'Korean', flag: 'kr' },
+    { code: 'ar', name: 'Arabic', flag: 'sa' },
+    { code: 'vi', name: 'Vietnamese', flag: 'vn' }
   ];
 
   const handleTranslate = async () => {
@@ -69,6 +69,41 @@ export default function TextTranslation() {
     setConfidenceScore(0);
   };
 
+  const LanguageSelect = ({ value, onChange, languages }: { 
+    value: string; 
+    onChange: (value: string) => void;
+    languages: typeof languages;
+  }) => (
+    <div className="relative inline-block">
+      <select 
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 pl-10 pr-8 focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+      >
+        {languages.map((lang) => (
+          <option key={lang.code} value={lang.code} className="flex items-center">
+            {lang.name}
+          </option>
+        ))}
+      </select>
+      <div className="absolute left-2 top-2.5 w-6 h-4 pointer-events-none">
+        <img 
+          src={`https://flagcdn.com/w20/${languages.find(l => l.code === value)?.flag}.png`}
+          srcSet={`https://flagcdn.com/w40/${languages.find(l => l.code === value)?.flag}.png 2x`}
+          width="20"
+          height="15"
+          alt={`${languages.find(l => l.code === value)?.name} flag`}
+          className="rounded-sm"
+        />
+      </div>
+      <div className="absolute right-2 top-3 pointer-events-none">
+        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -82,15 +117,11 @@ export default function TextTranslation() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
-              <select 
+              <LanguageSelect 
                 value={sourceLanguage}
-                onChange={(e) => setSourceLanguage(e.target.value)}
-                className="bg-gray-100 dark:bg-gray-700 border-0 rounded-md py-1 px-3 text-sm focus:ring-2 focus:ring-blue-500"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>{lang.name}</option>
-                ))}
-              </select>
+                onChange={setSourceLanguage}
+                languages={languages}
+              />
               
               <button 
                 onClick={handleSwapLanguages}
@@ -100,15 +131,11 @@ export default function TextTranslation() {
                 <ArrowLeftRight size={18} />
               </button>
               
-              <select 
+              <LanguageSelect 
                 value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                className="bg-gray-100 dark:bg-gray-700 border-0 rounded-md py-1 px-3 text-sm focus:ring-2 focus:ring-blue-500"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>{lang.name}</option>
-                ))}
-              </select>
+                onChange={setTargetLanguage}
+                languages={languages}
+              />
             </div>
           </div>
           
@@ -154,7 +181,15 @@ export default function TextTranslation() {
         {/* Translated text */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <div className="font-medium">
+            <div className="font-medium flex items-center">
+              <img 
+                src={`https://flagcdn.com/w20/${languages.find(l => l.code === targetLanguage)?.flag}.png`}
+                srcSet={`https://flagcdn.com/w40/${languages.find(l => l.code === targetLanguage)?.flag}.png 2x`}
+                width="20"
+                height="15"
+                alt={`${languages.find(l => l.code === targetLanguage)?.name} flag`}
+                className="rounded-sm mr-2"
+              />
               {languages.find(l => l.code === targetLanguage)?.name}
             </div>
             {confidenceScore > 0 && (
@@ -223,8 +258,24 @@ export default function TextTranslation() {
           <h2 className="text-lg font-semibold mb-3">Translation History</h2>
           <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-3">
             <div className="flex justify-between mb-1">
-              <div className="text-sm font-medium">
-                {languages.find(l => l.code === sourceLanguage)?.name} → {languages.find(l => l.code === targetLanguage)?.name}
+              <div className="text-sm font-medium flex items-center">
+                <img 
+                  src={`https://flagcdn.com/w20/${languages.find(l => l.code === sourceLanguage)?.flag}.png`}
+                  width="20"
+                  height="15"
+                  alt={`${languages.find(l => l.code === sourceLanguage)?.name} flag`}
+                  className="rounded-sm mr-2"
+                />
+                {languages.find(l => l.code === sourceLanguage)?.name}
+                <ArrowLeftRight size={14} className="mx-2" />
+                <img 
+                  src={`https://flagcdn.com/w20/${languages.find(l => l.code === targetLanguage)?.flag}.png`}
+                  width="20"
+                  height="15"
+                  alt={`${languages.find(l => l.code === targetLanguage)?.name} flag`}
+                  className="rounded-sm mr-2"
+                />
+                {languages.find(l => l.code === targetLanguage)?.name}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">Just now</div>
             </div>
