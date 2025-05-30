@@ -20,6 +20,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const languages = [
     { code: 'en', name: 'English', flag: 'gb' },
@@ -40,6 +41,8 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     if (!user) return;
     
     setIsLoading(true);
+    setError('');
+
     try {
       // Create project
       const { data: project, error: projectError } = await supabase
@@ -51,17 +54,37 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
           target_languages: projectData.targetLanguages,
           owner_id: user.id,
           status: 'draft',
-          due_date: projectData.dueDate || null
+          due_date: projectData.dueDate || null,
+          progress: 0
         })
         .select()
         .single();
 
       if (projectError) throw projectError;
 
+      // Create team member entry for the owner
+      const { error: teamError } = await supabase
+        .from('team_members')
+        .insert({
+          project_id: project.id,
+          user_id: user.id,
+          role: 'owner'
+        });
+
+      if (teamError) throw teamError;
+
       onClose();
-      navigate(`/projects/${project.id}`);
-    } catch (error) {
+      // Reset form
+      setProjectData({
+        name: '',
+        description: '',
+        sourceLanguage: 'en',
+        targetLanguages: [],
+        dueDate: ''
+      });
+    } catch (error: any) {
       console.error('Error creating project:', error);
+      setError(error.message || 'Failed to create project');
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +118,12 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
         </div>
 
         <div className="p-6">
+          {error && (
+            <div className="mb-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-6">
             {/* Project Details */}
             <div>
@@ -135,6 +164,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
                     value={projectData.dueDate}
                     onChange={(e) => setProjectData({ ...projectData, dueDate: e.target.value })}
                     className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
+                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               </div>
