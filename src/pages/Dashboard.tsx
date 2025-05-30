@@ -5,6 +5,7 @@ import { ActivityFeed } from '../components/dashboard/ActivityFeed';
 import { RecentDocuments } from '../components/dashboard/RecentDocuments';
 import { TeamActivity } from '../components/dashboard/TeamActivity';
 import { CreateProjectModal } from '../components/projects/CreateProjectModal';
+import { QuickTranslateModal } from '../components/translation/QuickTranslateModal';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -12,6 +13,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 export default function Dashboard() {
   const [statsExpanded, setStatsExpanded] = useState(true);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+  const [isQuickTranslateModalOpen, setIsQuickTranslateModalOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     totalDocuments: 0,
     pendingDocuments: 0,
@@ -58,7 +60,7 @@ export default function Dashboard() {
           .order('updated_at', { ascending: false })
           .limit(5);
 
-        // Fetch team activity - Fixed query to use proper join syntax
+        // Fetch team activity
         const { data: teamMembers } = await supabase
           .from('team_members')
           .select(`
@@ -127,7 +129,10 @@ export default function Dashboard() {
             <Plus size={18} className="mr-2" />
             New Project
           </button>
-          <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center">
+          <button 
+            onClick={() => setIsQuickTranslateModalOpen(true)}
+            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center"
+          >
             <Languages size={18} className="mr-2" />
             Quick Translate
           </button>
@@ -203,10 +208,15 @@ export default function Dashboard() {
       {/* Team activity */}
       <TeamActivity teamMembers={dashboardData.teamActivity} />
 
-      {/* Create Project Modal */}
+      {/* Modals */}
       <CreateProjectModal 
         isOpen={isCreateProjectModalOpen}
         onClose={() => setIsCreateProjectModalOpen(false)}
+      />
+      
+      <QuickTranslateModal
+        isOpen={isQuickTranslateModalOpen}
+        onClose={() => setIsQuickTranslateModalOpen(false)}
       />
     </div>
   );
