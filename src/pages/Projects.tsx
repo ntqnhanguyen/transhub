@@ -54,7 +54,7 @@ export default function Projects() {
             ),
             documents(count)
           `)
-          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
+          .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
           .order('updated_at', { ascending: false });
 
         if (error) throw error;
@@ -301,7 +301,7 @@ export default function Projects() {
                   ),
                   documents(count)
                 `)
-                .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
+                .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
                 .order('updated_at', { ascending: false });
 
               if (error) {
