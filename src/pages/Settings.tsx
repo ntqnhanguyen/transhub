@@ -29,7 +29,7 @@ export default function Settings() {
     projectUpdates: true,
     teamChanges: true,
     openaiApiKey: '',
-    openaiModel: 'gpt-3.5-turbo',
+    openaiModel: 'text-davinci-003',
     openaiBaseUrl: ''
   });
 
@@ -47,7 +47,7 @@ export default function Settings() {
           setFormData(prev => ({
             ...prev,
             openaiApiKey: settings.openai_api_key || '',
-            openaiModel: settings.openai_model || 'gpt-3.5-turbo',
+            openaiModel: settings.openai_model || 'text-davinci-003',
             openaiBaseUrl: settings.openai_base_url || ''
           }));
         }
@@ -646,9 +646,14 @@ export default function Settings() {
                       onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
                       className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                      <option value="gpt-4">GPT-4</option>
+                      <option value="text-davinci-003">text-davinci-003</option>
+                      <option value="text-curie-001">text-curie-001</option>
+                      <option value="text-babbage-001">text-babbage-001</option>
+                      <option value="text-ada-001">text-ada-001</option>
                     </select>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Select a text-only model for translations
+                    </p>
                   </div>
 
                   <div>
