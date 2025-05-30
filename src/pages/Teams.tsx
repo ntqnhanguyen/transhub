@@ -113,8 +113,7 @@ export default function Teams() {
           *,
           team_members (
             id,
-            role,
-            user_id
+            role
           )
         `)
         .in('id', teamIds)
