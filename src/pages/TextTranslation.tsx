@@ -25,6 +25,7 @@ export default function TextTranslation() {
     { code: 'ja', name: 'Japanese' },
     { code: 'ko', name: 'Korean' },
     { code: 'ar', name: 'Arabic' },
+    { code: 'vi', name: 'Vietnamese' }  // Added Vietnamese support
   ];
 
   const handleTranslate = async () => {
