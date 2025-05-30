@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { X, Plus, Search, Users, Languages, FileText } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -15,6 +18,9 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     targetLanguages: [] as string[],
     team: [] as string[]
   });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -29,13 +35,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     { code: 'ko', name: 'Korean' }
   ];
 
-  const teamMembers = [
-    { id: 1, name: 'Sarah Chen', email: 'sarah.chen@company.com', role: 'Translator' },
-    { id: 2, name: 'Michael Kim', email: 'michael.kim@company.com', role: 'Reviewer' },
-    { id: 3, name: 'Jessica Lopez', email: 'jessica.lopez@company.com', role: 'Editor' },
-    { id: 4, name: 'David Wilson', email: 'david.wilson@company.com', role: 'Translator' }
-  ];
-
   const handleNext = () => {
     setStep(step + 1);
   };
@@ -44,10 +43,49 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     setStep(step - 1);
   };
 
-  const handleCreate = () => {
-    // Here you would implement the project creation logic
-    console.log('Creating project:', projectData);
-    onClose();
+  const handleCreate = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Create project
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: projectData.name,
+          description: projectData.description,
+          source_language: projectData.sourceLanguage,
+          target_languages: projectData.targetLanguages,
+          owner_id: user.id,
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (projectError) throw projectError;
+
+      // Add team members
+      if (projectData.team.length > 0) {
+        const teamMembers = projectData.team.map(userId => ({
+          project_id: project.id,
+          user_id: userId,
+          role: 'translator'
+        }));
+
+        const { error: teamError } = await supabase
+          .from('team_members')
+          .insert(teamMembers);
+
+        if (teamError) throw teamError;
+      }
+
+      onClose();
+      navigate(`/projects/${project.id}`);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLanguageToggle = (code: string) => {
@@ -59,12 +97,12 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     }));
   };
 
-  const handleTeamMemberToggle = (id: number) => {
+  const handleTeamMemberToggle = (id: string) => {
     setProjectData(prev => ({
       ...prev,
-      team: prev.team.includes(id.toString())
-        ? prev.team.filter(memberId => memberId !== id.toString())
-        : [...prev.team, id.toString()]
+      team: prev.team.includes(id)
+        ? prev.team.filter(memberId => memberId !== id)
+        : [...prev.team, id]
     }));
   };
 
@@ -86,9 +124,8 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
         <div className="p-4">
           {/* Progress indicator */}
           <div className="flex items-center mb-6">
-            <div className={`w-1/3 h-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-            <div className={`w-1/3 h-1 rounded-full mx-1 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-            <div className={`w-1/3 h-1 rounded-full ${step === 3 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+            <div className={`w-1/2 h-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+            <div className={`w-1/2 h-1 rounded-full mx-1 ${step === 2 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
           </div>
 
           {step === 1 && (
@@ -166,51 +203,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
               </div>
             </div>
           )}
-
-          {step === 3 && (
-            <div>
-              <h3 className="text-lg font-medium mb-4">Team Members</h3>
-              
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  placeholder="Search team members..."
-                  className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-blue-500"
-                />
-                <Search className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400" size={18} />
-              </div>
-
-              <div className="space-y-2">
-                {teamMembers.map(member => (
-                  <button
-                    key={member.id}
-                    onClick={() => handleTeamMemberToggle(member.id)}
-                    className={`
-                      w-full p-3 rounded-lg border flex items-center justify-between
-                      ${projectData.team.includes(member.id.toString())
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'}
-                    `}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-3">
-                        {member.name.charAt(0)}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium">{member.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{member.role}</p>
-                      </div>
-                    </div>
-                    {projectData.team.includes(member.id.toString()) && (
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <Check size={12} className="text-white" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-between p-4 border-t border-gray-200 dark:border-gray-700">
@@ -225,20 +217,32 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
             <div></div>
           )}
           
-          {step < 3 ? (
+          {step < 2 ? (
             <button
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+              disabled={!projectData.name}
+              className={`
+                px-4 py-2 rounded-lg transition-colors duration-200
+                ${!projectData.name
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'}
+              `}
             >
               Next
             </button>
           ) : (
             <button
               onClick={handleCreate}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center"
+              disabled={isLoading || projectData.targetLanguages.length === 0}
+              className={`
+                px-4 py-2 rounded-lg transition-colors duration-200 flex items-center
+                ${isLoading || projectData.targetLanguages.length === 0
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'}
+              `}
             >
               <Plus size={18} className="mr-2" />
-              Create Project
+              {isLoading ? 'Creating...' : 'Create Project'}
             </button>
           )}
         </div>
