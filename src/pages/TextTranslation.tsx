@@ -24,13 +24,6 @@ export default function TextTranslation() {
     { code: 'ko', name: 'Korean' },
     { code: 'ar', name: 'Arabic' },
   ];
-  
-  // Mock translation models
-  const translationModels = [
-    { id: 'neural-mt', name: 'Neural MT (Recommended)', description: 'High quality neural machine translation' },
-    { id: 'advanced-mt', name: 'Advanced MT', description: 'Specialized for technical content' },
-    { id: 'base-mt', name: 'Base MT', description: 'Fastest translation speed' },
-  ];
 
   const handleTranslate = () => {
     if (!sourceText.trim()) return;
@@ -83,36 +76,6 @@ export default function TextTranslation() {
       <div>
         <h1 className="text-2xl font-bold mb-2">Text Translation</h1>
         <p className="text-gray-600 dark:text-gray-300">Translate text between languages using our advanced AI models.</p>
-      </div>
-      
-      {/* Translation model selection */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <h2 className="text-lg font-semibold mb-3">Translation Model</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {translationModels.map((model) => (
-            <div 
-              key={model.id}
-              className={`
-                border rounded-lg p-3 cursor-pointer
-                ${model.id === 'neural-mt' 
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                  : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'}
-              `}
-            >
-              <div className="flex items-start">
-                <div className="flex-1">
-                  <h3 className="font-medium">{model.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{model.description}</p>
-                </div>
-                {model.id === 'neural-mt' && (
-                  <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-                    <Check size={12} className="text-white" />
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
       
       {/* Translation interface */}
