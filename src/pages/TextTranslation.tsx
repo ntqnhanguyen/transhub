@@ -10,7 +10,6 @@ export default function TextTranslation() {
   const [isCopied, setIsCopied] = useState(false);
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [confidenceScore, setConfidenceScore] = useState(0);
   const { user } = useAuth();
   
   const languages = [
@@ -41,7 +40,6 @@ export default function TextTranslation() {
       );
 
       setTranslatedText(translatedContent);
-      setConfidenceScore(95); // Example confidence score
     } catch (error) {
       console.error('Error translating text:', error);
       alert('Error translating text. Please check your API settings in the Settings page.');
@@ -66,7 +64,6 @@ export default function TextTranslation() {
   const handleClear = () => {
     setSourceText('');
     setTranslatedText('');
-    setConfidenceScore(0);
   };
 
   const LanguageSelect = ({ value, onChange, languages }: { 
@@ -192,19 +189,6 @@ export default function TextTranslation() {
               />
               {languages.find(l => l.code === targetLanguage)?.name}
             </div>
-            {confidenceScore > 0 && (
-              <div className="flex items-center text-sm">
-                <Star size={14} className="text-amber-500 mr-1" />
-                <span>Quality: </span>
-                <span className={`ml-1 font-medium ${
-                  confidenceScore > 90 ? 'text-green-600 dark:text-green-400' : 
-                  confidenceScore > 80 ? 'text-blue-600 dark:text-blue-400' : 
-                  'text-amber-600 dark:text-amber-400'
-                }`}>
-                  {confidenceScore}%
-                </span>
-              </div>
-            )}
           </div>
           
           <div className="p-4">
