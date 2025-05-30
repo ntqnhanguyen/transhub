@@ -110,7 +110,6 @@ export default function Teams() {
             id,
             role,
             user_profiles(
-               id,
               full_name,
               avatar_url,
               email
