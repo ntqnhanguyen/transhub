@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Languages, Copy, Check, RotateCcw, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { translateText } from '../../lib/openai';
 
 interface QuickTranslateModalProps {
   isOpen: boolean;
@@ -35,6 +36,13 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
     
     setIsTranslating(true);
     try {
+      // Get translation from OpenAI
+      const translatedContent = await translateText(
+        sourceText,
+        languages.find(l => l.code === sourceLanguage)?.name || sourceLanguage,
+        languages.find(l => l.code === targetLanguage)?.name || targetLanguage
+      );
+
       // Create a new project for the quick translation
       const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -58,7 +66,7 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
           name: 'Quick Translation Text',
           source_language: sourceLanguage,
           target_language: targetLanguage,
-          status: 'in_progress',
+          status: 'completed',
           translator_id: user.id,
           file_url: 'quick-translation.txt',
           file_size: sourceText.length
@@ -74,7 +82,7 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
         .insert({
           document_id: document.id,
           source_text: sourceText,
-          target_text: `[Translated] ${sourceText}`, // In a real app, this would use an actual translation service
+          target_text: translatedContent,
           status: 'completed',
           translator_id: user.id,
           confidence_score: 95
@@ -84,7 +92,7 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
 
       if (translationError) throw translationError;
 
-      setTranslatedText(translation.target_text);
+      setTranslatedText(translatedContent);
     } catch (error) {
       console.error('Error performing quick translation:', error);
     } finally {
