@@ -644,7 +644,7 @@ export default function Settings() {
                     <input
                       type="text"
                       value={formData.openaiModel}
-                      onChange={(e) => setFormData({ ...formData, openaiBaseUrl: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
                       className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
                       placeholder="openai/gpt-4.1-nano"
                     />
