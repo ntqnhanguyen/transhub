@@ -48,13 +48,13 @@ export default function Projects() {
           .from('projects')
           .select(`
             *,
-            team_members!inner(
+            team_members(
               user_id,
               role
             ),
             documents(count)
           `)
-          .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
+          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
           .order('updated_at', { ascending: false });
 
         if (error) throw error;
@@ -295,13 +295,13 @@ export default function Projects() {
                 .from('projects')
                 .select(`
                   *,
-                  team_members!inner(
+                  team_members(
                     user_id,
                     role
                   ),
                   documents(count)
                 `)
-                .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
+                .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
                 .order('updated_at', { ascending: false });
 
               if (error) {
