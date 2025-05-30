@@ -606,8 +606,7 @@ export default function Settings() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              <button className="text-blue-600 dark:text-blue-400 hover:under
-line">
+                              <button className="text-blue-600 dark:text-blue-400 hover:underline">
                                 Download
                               </button>
                             </td>
@@ -641,7 +640,7 @@ line">
                 <div className="space-y-4 max-w-md">
                   {saveStatus === 'error' && (
                     <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start">
-                      <AlertCircle className="text-red-500 mt-0.5 mr-2\" size={16} />
+                      <AlertCircle className="text-red-500 mt-0.5 mr-2" size={16} />
                       <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
                     </div>
                   )}
@@ -670,18 +669,15 @@ line">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       OpenAI Model
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={formData.openaiModel}
                       onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
                       className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="text-davinci-003">text-davinci-003</option>
-                      <option value="text-curie-001">text-curie-001</option>
-                      <option value="text-babbage-001">text-babbage-001</option>
-                      <option value="text-ada-001">text-ada-001</option>
-                    </select>
+                      placeholder="Enter model name (e.g. gpt-3.5-turbo)"
+                    />
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Select a text-only model for translations
+                      Enter the name of the OpenAI model you want to use
                     </p>
                   </div>
 
