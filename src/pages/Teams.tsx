@@ -18,10 +18,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 interface UserProfile {
-  id: string;
   full_name: string;
   avatar_url: string | null;
-  email: string;
 }
 
 interface TeamMember {
@@ -102,7 +100,6 @@ export default function Teams() {
       // If no teams found, set empty array and return
       if (teamIds.length === 0) {
         setTeams([]);
-        setLoading(false);
         return;
       }
 
@@ -113,7 +110,15 @@ export default function Teams() {
           *,
           team_members (
             id,
-            role
+            role,
+            user:user_id (
+              id,
+              email,
+              user_profiles (
+                full_name,
+                avatar_url
+              )
+            )
           )
         `)
         .in('id', teamIds)
@@ -285,7 +290,7 @@ export default function Teams() {
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user.user_profiles[0]?.full_name?.[0] || member.user.email[0].toUpperCase()}
+                            {member.user.user_profiles[0]?.full_name[0] || member.user.email[0].toUpperCase()}
                           </div>
                           <div className="ml-3">
                             <p className="text-sm font-medium">
