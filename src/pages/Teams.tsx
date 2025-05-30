@@ -101,87 +101,30 @@ export default function Teams() {
       }
 
       // Fetch full team details using the combined team IDs
-      // const { data: teamsData, error: teamsError } = await supabase
-      //   .from('teams')
-      //   .select(`
-      //     *,
-      //     team_members (
-      //       id,
-      //       role,
-      //       user_profiles!inner (
-      //         full_name,
-      //         avatar_url,
-      //         email
-      //       )
-      //     )
-      //   `)
-      //   .in('id', teamIds)
-      //   .order('created_at', { ascending: false });
+      const { data: teamsData, error: teamsError } = await supabase
+        .from('teams')
+        .select(`
+          *,
+          team_members (
+            id,
+            role,
+            user_profiles(
+              full_name,
+              avatar_url,
+              email
+            )
+          )
+        `)
+        .in('id', teamIds)
+        .order('created_at', { ascending: false });
 
-      
-// Fetch teams and team members first
-const { data: teamsData, error: teamsError } = await supabase
-  .from('teams')
-  .select(`
-    *,
-    team_members (
-      id,
-      role,
-      user_id
-    )
-  `)
-  .in('id', teamIds)
-  .order('created_at', { ascending: false });
-
-if (teamsError) {
-  console.error('Error fetching teams:', teamsError);
-  return;
-}
-
-// Extract all unique user_ids from team members
-  const userIds = [];
-  teamsData.forEach(team => {
-    team.team_members.forEach(member => {
-      if (member.user_id && !userIds.includes(member.user_id)) {
-        userIds.push(member.user_id);
-      }
-    });
-  });
-  
-  // Fetch user profiles for all user_ids
-  const { data: userProfiles, error: profilesError } = await supabase
-    .from('user_profiles')
-    .select('id, full_name, avatar_url, email')
-    .in('id', userIds);
-  
-  if (profilesError) {
-    console.error('Error fetching user profiles:', profilesError);
-    return;
-  }
-  
-  // Create a map of user profiles for quick lookup
-  const profilesMap = {};
-  userProfiles.forEach(profile => {
-    profilesMap[profile.id] = profile;
-  });
-  
-  // Combine the data by adding user profile info to team members
-  const enrichedTeamsData = teamsData.map(team => ({
-    ...team,
-    team_members: team.team_members.map(member => ({
-      id: member.id,
-      role: member.role,
-      user_id: member.user_id,
-      user_profiles: profilesMap[member.user_id] || null
-    }))
-  }));
-      // if (teamsError) throw teamsError;
+      if (teamsError) throw teamsError;
 
       if (!teamsData) {
         throw new Error('No teams data received');
       }
 
-      setTeams(enrichedTeamsData);
+      setTeams(teamsData);
     } catch (err) {
       console.error('Error fetching teams:', err);
       setError('Failed to load teams');
