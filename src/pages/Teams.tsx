@@ -111,6 +111,8 @@ export default function Teams() {
       setError('');
       
       // Create team
+      console.log(newTeamData)
+      console.log(user)
       const { data: team, error: teamError } = await supabase
         .from('teams')
         .insert({
