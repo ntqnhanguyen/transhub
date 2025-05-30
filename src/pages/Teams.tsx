@@ -82,7 +82,8 @@ export default function Teams() {
             role,
             user_profiles!inner (
               full_name,
-              avatar_url
+              avatar_url,
+              email
             )
           )
         `)
