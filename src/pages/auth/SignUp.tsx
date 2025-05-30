@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Globe, Mail, Lock, AlertCircle, User } from 'lucide-react';
+import { Globe, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,27 +22,10 @@ export default function SignUp() {
     try {
       setError('');
       setLoading(true);
-      
-      // Sign up the user
-      const { data: authData, error: signUpError } = await signUp(email, password);
-      if (signUpError) throw signUpError;
-
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          user_id: authData.user.id,
-          full_name: fullName,
-          email: email,
-          preferred_language: 'en'
-        });
-
-      if (profileError) throw profileError;
-
+      await signUp(email, password);
       navigate('/');
-    } catch (err: any) {
-      console.error('Error during signup:', err);
-      setError(err.message || 'Failed to create an account');
+    } catch (err) {
+      setError('Failed to create an account');
     } finally {
       setLoading(false);
     }
@@ -74,28 +55,10 @@ export default function SignUp() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start">
-                <AlertCircle className="text-red-500 mt-0.5 mr-3\" size={16} />
+                <AlertCircle className="text-red-500 mt-0.5 mr-3" size={16} />
                 <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             )}
-
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium">
-                Full Name
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700"
-                />
-                <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              </div>
-            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium">

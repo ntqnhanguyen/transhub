@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
-  signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -26,34 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        // Check if user profile exists
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
-
-        // If no profile exists and we have an email, create one
-        if (!profile && !profileError && currentUser.email) {
-          const { error: createError } = await supabase
-            .from('user_profiles')
-            .insert({
-              user_id: currentUser.id,
-              email: currentUser.email,
-              full_name: currentUser.email.split('@')[0], // Use email username as temporary name
-              preferred_language: 'en'
-            });
-
-          if (createError) {
-            console.error('Error creating user profile:', createError);
-          }
-        }
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
     });
 
     // Cleanup subscription
@@ -61,14 +35,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    return { data, error };
+    if (error) throw error;
   };
 
   const signIn = async (email: string, password: string) => {
