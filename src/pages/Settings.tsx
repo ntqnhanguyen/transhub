@@ -641,16 +641,13 @@ export default function Settings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       OpenAI Model
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={formData.openaiModel}
-                      onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, openaiBaseUrl: e.target.value })}
                       className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="text-davinci-003">text-davinci-003</option>
-                      <option value="text-curie-001">text-curie-001</option>
-                      <option value="text-babbage-001">text-babbage-001</option>
-                      <option value="text-ada-001">text-ada-001</option>
-                    </select>
+                      placeholder="openai/gpt-4.1-nano"
+                    />
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Select a text-only model for translations
                     </p>
