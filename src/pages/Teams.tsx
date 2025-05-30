@@ -114,16 +114,7 @@ export default function Teams() {
           team_members (
             id,
             role,
-            user:user_id (
-              id,
-              email,
-              user_profiles!inner (
-                id,
-                full_name,
-                avatar_url,
-                email
-              )
-            )
+            user_id
           )
         `)
         .in('id', teamIds)
