@@ -20,16 +20,13 @@ import { useAuth } from '../context/AuthContext';
 interface UserProfile {
   full_name: string;
   avatar_url: string | null;
+  email: string;
 }
 
 interface TeamMember {
   id: string;
   role: string;
-  user: {
-    id: string;
-    email: string;
-    user_profiles: UserProfile[];
-  };
+  user_profiles: UserProfile;
 }
 
 interface Team {
@@ -111,13 +108,10 @@ export default function Teams() {
           team_members (
             id,
             role,
-            user:user_id (
-              id,
-              email,
-              user_profiles (
-                full_name,
-                avatar_url
-              )
+            user_profiles!inner (
+              full_name,
+              avatar_url,
+              email
             )
           )
         `)
@@ -290,11 +284,11 @@ export default function Teams() {
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user.user_profiles[0]?.full_name[0] || member.user.email[0].toUpperCase()}
+                            {member.user_profiles?.full_name[0] || member.user_profiles?.email[0].toUpperCase()}
                           </div>
                           <div className="ml-3">
                             <p className="text-sm font-medium">
-                              {member.user.user_profiles[0]?.full_name || member.user.email}
+                              {member.user_profiles?.full_name || member.user_profiles?.email}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>

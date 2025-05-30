@@ -33,9 +33,9 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        // First, get project IDs where user is a team member
-        const { data: teamMemberProjects } = await supabase
-          .from('team_members')
+        // First, get project IDs where user is a project member
+        const { data: projectMemberProjects } = await supabase
+          .from('project_members')
           .select('project_id')
           .eq('user_id', user.id);
 
@@ -48,7 +48,7 @@ export default function Dashboard() {
         // Combine and deduplicate project IDs
         const projectIds = [
           ...new Set([
-            ...(teamMemberProjects?.map(p => p.project_id) || []),
+            ...(projectMemberProjects?.map(p => p.project_id) || []),
             ...(ownedProjects?.map(p => p.id) || [])
           ])
         ];
@@ -58,7 +58,7 @@ export default function Dashboard() {
           .from('projects')
           .select(`
             *,
-            team_members!inner(user_id),
+            project_members!inner(user_id),
             documents(count)
           `)
           .in('id', projectIds)
@@ -69,10 +69,10 @@ export default function Dashboard() {
           .from('documents')
           .select(`
             *,
-            project:project_id (
+            project:projects!inner(
               name,
               owner_id,
-              team_members(user_id)
+              project_members(user_id)
             ),
             translations(count)
           `)
@@ -80,31 +80,28 @@ export default function Dashboard() {
           .order('updated_at', { ascending: false })
           .limit(5);
 
-        // Only fetch team members if we have projects
-        let teamMembers = [];
+        // Only fetch project members if we have projects
+        let projectMembers = [];
         if (projectIds.length > 0) {
-          const { data: teamMembersData } = await supabase
-            .from('team_members')
+          const { data: projectMembersData } = await supabase
+            .from('project_members')
             .select(`
               *,
-              project:project_id (
+              project:projects!inner(
                 name,
                 owner_id
               ),
-              user:user_id (
-                id,
-                email,
-                profile:user_profiles!inner (
-                  full_name,
-                  avatar_url
-                )
+              user_profiles!inner(
+                full_name,
+                avatar_url,
+                email
               )
             `)
             .in('project_id', projectIds)
             .order('updated_at', { ascending: false })
             .limit(4);
           
-          teamMembers = teamMembersData || [];
+          projectMembers = projectMembersData || [];
         }
 
         // Calculate statistics
@@ -127,12 +124,12 @@ export default function Dashboard() {
           pendingDocuments: documents?.filter(d => d.status === 'queued').length || 0,
           totalLanguages: uniqueLanguages.size,
           newLanguages: recentLanguages.size,
-          teamMembers: teamMembers.length,
+          teamMembers: projectMembers.length,
           pendingInvitations: 2,
           timeSaved: 43,
           projects: projects || [],
           recentDocuments: documents || [],
-          teamActivity: teamMembers
+          teamActivity: projectMembers
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
