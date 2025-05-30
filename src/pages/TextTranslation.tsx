@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeftRight, Languages, Copy, Check, RotateCcw, Download, Star, Save } from 'lucide-react';
 import { translateText } from '../lib/openai';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 export default function TextTranslation() {
@@ -40,57 +39,8 @@ export default function TextTranslation() {
         languages.find(l => l.code === targetLanguage)?.name || targetLanguage
       );
 
-      // Create a new project for the translation
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: 'Text Translation',
-          source_language: sourceLanguage,
-          target_languages: [targetLanguage],
-          owner_id: user.id,
-          status: 'draft'
-        })
-        .select()
-        .single();
-
-      if (projectError) throw projectError;
-
-      // Create a document for the translation
-      const { data: document, error: documentError } = await supabase
-        .from('documents')
-        .insert({
-          project_id: project.id,
-          name: 'Translated Text',
-          source_language: sourceLanguage,
-          target_language: targetLanguage,
-          status: 'completed',
-          translator_id: user.id,
-          file_url: 'text-translation.txt',
-          file_size: sourceText.length
-        })
-        .select()
-        .single();
-
-      if (documentError) throw documentError;
-
-      // Create the translation
-      const { data: translation, error: translationError } = await supabase
-        .from('translations')
-        .insert({
-          document_id: document.id,
-          source_text: sourceText,
-          target_text: translatedContent,
-          status: 'completed',
-          translator_id: user.id,
-          confidence_score: 95
-        })
-        .select()
-        .single();
-
-      if (translationError) throw translationError;
-
       setTranslatedText(translatedContent);
-      setConfidenceScore(95);
+      setConfidenceScore(95); // Example confidence score
     } catch (error) {
       console.error('Error translating text:', error);
       alert('Error translating text. Please check your API settings in the Settings page.');
