@@ -7,7 +7,7 @@ export async function getOpenAIInstance() {
   if (!openaiInstance) {
     const { data: settings } = await supabase
       .from('settings')
-      .select('openai_api_key, openai_model')
+      .select('openai_api_key, openai_model, openai_base_url')
       .single();
 
     if (!settings?.openai_api_key) {
@@ -16,6 +16,7 @@ export async function getOpenAIInstance() {
 
     openaiInstance = new OpenAI({
       apiKey: settings.openai_api_key,
+      baseURL: settings.openai_base_url || undefined,
       dangerouslyAllowBrowser: true
     });
   }
