@@ -175,7 +175,7 @@ if (teamsError) {
       user_profiles: profilesMap[member.user_id] || null
     }))
   }));
-      const teamsData = enrichedTeamsData
+      teamsData = enrichedTeamsData
       // if (teamsError) throw teamsError;
 
       if (!teamsData) {
