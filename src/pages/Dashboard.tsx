@@ -49,14 +49,14 @@ export default function Dashboard() {
           .from('documents')
           .select(`
             *,
-            projects!inner(
+            project:project_id (
               name,
               owner_id,
-              team_members!inner(user_id)
+              team_members(user_id)
             ),
             translations(count)
           `)
-          .or(`projects.owner_id.eq.${user.id},projects.team_members.user_id.eq.${user.id}`)
+          .or(`project.owner_id.eq.${user.id},project.team_members.user_id.eq.${user.id}`)
           .order('updated_at', { ascending: false })
           .limit(5);
 
@@ -68,27 +68,32 @@ export default function Dashboard() {
 
         const projectIds = userProjects?.map(p => p.id) || [];
 
-        // Then fetch team members for those projects
-        const { data: teamMembers } = await supabase
-          .from('team_members')
-          .select(`
-            *,
-            projects:project_id (
-              name,
-              owner_id
-            ),
-            users:user_id (
-              id,
-              email,
-              user_profiles!inner (
-                full_name,
-                avatar_url
+        // Only fetch team members if we have projects
+        let teamMembers = [];
+        if (projectIds.length > 0) {
+          const { data: teamMembersData } = await supabase
+            .from('team_members')
+            .select(`
+              *,
+              project:project_id (
+                name,
+                owner_id
+              ),
+              user:user_id (
+                id,
+                email,
+                profile:user_profiles!inner (
+                  full_name,
+                  avatar_url
+                )
               )
-            )
-          `)
-          .in('project_id', projectIds)
-          .order('updated_at', { ascending: false })
-          .limit(4);
+            `)
+            .in('project_id', projectIds)
+            .order('updated_at', { ascending: false })
+            .limit(4);
+          
+          teamMembers = teamMembersData || [];
+        }
 
         // Calculate statistics
         const uniqueLanguages = new Set();
@@ -110,12 +115,12 @@ export default function Dashboard() {
           pendingDocuments: documents?.filter(d => d.status === 'queued').length || 0,
           totalLanguages: uniqueLanguages.size,
           newLanguages: recentLanguages.size,
-          teamMembers: teamMembers?.length || 0,
+          teamMembers: teamMembers.length,
           pendingInvitations: 2,
           timeSaved: 43,
           projects: projects || [],
           recentDocuments: documents || [],
-          teamActivity: teamMembers || []
+          teamActivity: teamMembers
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

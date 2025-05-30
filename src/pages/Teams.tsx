@@ -51,12 +51,11 @@ export default function Teams() {
           *,
           team_members (
             id,
-            user_id,
             role,
-            users:user_id (
+            user:user_id (
               id,
               email,
-              user_profiles!inner (
+              profile:user_profiles!inner (
                 full_name,
                 avatar_url
               )
@@ -203,7 +202,7 @@ export default function Teams() {
           >
             <div className="p-4">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold">{team.name}</h3>
+                <h3  className="font-semibold">{team.name}</h3>
                 <button 
                   onClick={() => handleDeleteTeam(team.id)}
                   className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
@@ -224,10 +223,10 @@ export default function Teams() {
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.users.user_profiles.full_name[0]}
+                            {member.user.profile.full_name[0]}
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm font-medium">{member.users.user_profiles.full_name}</p>
+                            <p className="text-sm font-medium">{member.user.profile.full_name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>
                         </div>
