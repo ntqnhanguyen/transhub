@@ -144,7 +144,7 @@ export default function Teams() {
     if (!user) return;
 
     try {
-      setError('');
+      setError(''); 
       
       // Create team
       const { data: team, error: teamError } = await supabase
