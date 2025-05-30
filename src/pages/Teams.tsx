@@ -118,23 +118,7 @@ export default function Teams() {
       //   `)
       //   .in('id', teamIds)
       //   .order('created_at', { ascending: false });
-      const { data: teamsData, error: teamsError } = await supabase
-      .from('teams')
-      .select(`
-        *,
-        team_members (
-          id,
-          role,
-          user_id,
-          user_profiles (
-            full_name,
-            avatar_url,
-            email
-          )
-        )
-      `)
-      .in('id', teamIds)
-      .order('created_at', { ascending: false });
+      
 
       if (teamsError) throw teamsError;
 
