@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -8,13 +8,17 @@ import {
   Moon, 
   Sun,
   CreditCard,
-  Save
+  Save,
+  Check
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     name: 'Alex Johnson',
@@ -23,8 +27,56 @@ export default function Settings() {
     language: 'en',
     emailNotifications: true,
     projectUpdates: true,
-    teamChanges: true
+    teamChanges: true,
+    openaiApiKey: '',
+    openaiModel: 'gpt-3.5-turbo',
+    openaiBaseUrl: ''
   });
+
+  useEffect(() => {
+    if (user) {
+      // Load settings from Supabase
+      const loadSettings = async () => {
+        const { data: settings } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (settings) {
+          setFormData(prev => ({
+            ...prev,
+            openaiApiKey: settings.openai_api_key || '',
+            openaiModel: settings.openai_model || 'gpt-3.5-turbo',
+            openaiBaseUrl: settings.openai_base_url || ''
+          }));
+        }
+      };
+
+      loadSettings();
+    }
+  }, [user]);
+
+  const handleSaveSettings = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          user_id: user.id,
+          openai_api_key: formData.openaiApiKey,
+          openai_model: formData.openaiModel,
+          openai_base_url: formData.openaiBaseUrl
+        });
+
+      if (error) throw error;
+      alert('Settings saved successfully');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Error saving settings');
+    }
+  };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -124,6 +176,18 @@ export default function Settings() {
               >
                 <CreditCard size={18} className="mr-3" />
                 <span>Billing</span>
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center px-4 py-2 text-sm ${
+                  activeTab === 'settings' 
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <SettingsIcon size={18} className="mr-3" />
+                <span>API Settings</span>
               </button>
             </nav>
           </div>
@@ -550,6 +614,67 @@ export default function Settings() {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">API Settings</h2>
+                
+                <div className="space-y-4 max-w-md">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      OpenAI API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.openaiApiKey}
+                      onChange={(e) => setFormData({ ...formData, openaiApiKey: e.target.value })}
+                      className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
+                      placeholder="sk-..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      OpenAI Model
+                    </label>
+                    <select
+                      value={formData.openaiModel}
+                      onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
+                      className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                      <option value="gpt-4">GPT-4</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      OpenAI Base URL (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.openaiBaseUrl}
+                      onChange={(e) => setFormData({ ...formData, openaiBaseUrl: e.target.value })}
+                      className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://api.openai.com/v1"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Leave empty to use the default OpenAI API endpoint
+                    </p>
+                  </div>
+
+                  <div>
+                    <button
+                      onClick={handleSaveSettings}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center"
+                    >
+                      <Save size={16} className="mr-2" />
+                      Save API Settings
+                    </button>
                   </div>
                 </div>
               </div>
