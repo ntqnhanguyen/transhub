@@ -17,13 +17,36 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+interface TeamMember {
+  id: string;
+  role: string;
+  user: {
+    id: string;
+    email: string;
+    user_profiles: {
+      full_name: string;
+      avatar_url: string | null;
+    }[];
+  };
+}
+
+interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+  team_members: TeamMember[];
+}
+
 export default function Teams() {
-  const [teams, setTeams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<any>(null);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
 
@@ -77,13 +100,16 @@ export default function Teams() {
         .from('teams')
         .select(`
           *,
-          team_members!inner (
+          team_members (
             id,
             role,
-            user_profiles!inner (
-              full_name,
-              avatar_url,
-              email
+            user:user_id (
+              id,
+              email,
+              user_profiles (
+                full_name,
+                avatar_url
+              )
             )
           )
         `)
@@ -247,14 +273,14 @@ export default function Teams() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Members</h4>
                   <div className="space-y-2">
-                    {team.team_members.map((member: any) => (
+                    {team.team_members.map((member) => (
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user_profiles.full_name[0]}
+                            {member.user.user_profiles[0]?.full_name[0]}
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm font-medium">{member.user_profiles.full_name}</p>
+                            <p className="text-sm font-medium">{member.user.user_profiles[0]?.full_name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>
                         </div>
