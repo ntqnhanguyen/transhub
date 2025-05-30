@@ -17,16 +17,18 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+interface UserProfile {
+  full_name: string;
+  avatar_url: string | null;
+}
+
 interface TeamMember {
   id: string;
   role: string;
   user: {
     id: string;
     email: string;
-    user_profiles: {
-      full_name: string;
-      avatar_url: string | null;
-    }[];
+    user_profiles: UserProfile[];
   };
 }
 
@@ -68,17 +70,24 @@ export default function Teams() {
 
   const fetchTeams = async () => {
     try {
+      setLoading(true);
+      setError('');
+
       // First get teams where user is a member
-      const { data: memberTeams } = await supabase
+      const { data: memberTeams, error: memberError } = await supabase
         .from('team_members')
         .select('team_id')
         .eq('user_id', user?.id);
 
+      if (memberError) throw memberError;
+
       // Get teams where user is the owner
-      const { data: ownedTeams } = await supabase
+      const { data: ownedTeams, error: ownerError } = await supabase
         .from('teams')
         .select('id')
         .eq('owner_id', user?.id);
+
+      if (ownerError) throw ownerError;
 
       // Combine and deduplicate team IDs
       const teamIds = [
@@ -91,7 +100,6 @@ export default function Teams() {
       // If no teams found, set empty array and return
       if (teamIds.length === 0) {
         setTeams([]);
-        setLoading(false);
         return;
       }
 
@@ -117,7 +125,12 @@ export default function Teams() {
         .order('created_at', { ascending: false });
 
       if (teamsError) throw teamsError;
-      setTeams(teamsData || []);
+
+      if (!teamsData) {
+        throw new Error('No teams data received');
+      }
+
+      setTeams(teamsData);
     } catch (err) {
       console.error('Error fetching teams:', err);
       setError('Failed to load teams');
@@ -277,10 +290,12 @@ export default function Teams() {
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user.user_profiles[0]?.full_name[0]}
+                            {member.user.user_profiles[0]?.full_name[0] || member.user.email[0].toUpperCase()}
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm font-medium">{member.user.user_profiles[0]?.full_name}</p>
+                            <p className="text-sm font-medium">
+                              {member.user.user_profiles[0]?.full_name || member.user.email}
+                            </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>
                         </div>
