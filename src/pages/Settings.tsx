@@ -641,7 +641,7 @@ line">
                 <div className="space-y-4 max-w-md">
                   {saveStatus === 'error' && (
                     <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start">
-                      <AlertCircle className="text-red-500 mt-0.5 mr-2" size={16} />
+                      <AlertCircle className="text-red-500 mt-0.5 mr-2\" size={16} />
                       <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
                     </div>
                   )}
