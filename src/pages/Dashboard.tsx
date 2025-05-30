@@ -58,7 +58,7 @@ export default function Dashboard() {
           .order('updated_at', { ascending: false })
           .limit(5);
 
-        // Fetch team activity
+        // Fetch team activity - Fixed query to use proper join syntax
         const { data: teamMembers } = await supabase
           .from('team_members')
           .select(`
@@ -67,9 +67,12 @@ export default function Dashboard() {
               full_name,
               avatar_url
             ),
-            projects!inner(name)
+            projects!inner(
+              name,
+              owner_id
+            )
           `)
-          .or(`projects.owner_id.eq.${user.id},user_id.eq.${user.id}`)
+          .or('user_id.eq.' + user.id + ',projects.owner_id.eq.' + user.id)
           .order('updated_at', { ascending: false })
           .limit(4);
 
