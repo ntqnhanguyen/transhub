@@ -9,130 +9,100 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      teams: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          owner_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          owner_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          owner_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      team_members: {
+        Row: {
+          id: string
+          team_id: string
+          user_id: string
+          role: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          team_id: string
+          user_id: string
+          role: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          team_id?: string
+          user_id?: string
+          role?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
       projects: {
         Row: {
           id: string
           name: string
-          description: string
+          description: string | null
           source_language: string
           target_languages: string[]
           progress: number
           status: string
+          owner_id: string
+          due_date: string | null
           created_at: string
           updated_at: string
-          owner_id: string
-          due_date: string
         }
         Insert: {
           id?: string
           name: string
-          description: string
+          description?: string | null
           source_language: string
           target_languages: string[]
           progress?: number
           status?: string
+          owner_id: string
+          due_date?: string | null
           created_at?: string
           updated_at?: string
-          owner_id: string
-          due_date: string
         }
         Update: {
           id?: string
           name?: string
-          description?: string
+          description?: string | null
           source_language?: string
           target_languages?: string[]
           progress?: number
           status?: string
-          created_at?: string
-          updated_at?: string
           owner_id?: string
-          due_date?: string
+          due_date?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
-      documents: {
-        Row: {
-          id: string
-          project_id: string
-          name: string
-          source_language: string
-          target_language: string
-          status: string
-          progress: number
-          translator_id: string | null
-          created_at: string
-          updated_at: string
-          file_url: string
-          file_size: number
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          name: string
-          source_language: string
-          target_language: string
-          status?: string
-          progress?: number
-          translator_id?: string | null
-          created_at?: string
-          updated_at?: string
-          file_url: string
-          file_size: number
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          name?: string
-          source_language?: string
-          target_language?: string
-          status?: string
-          progress?: number
-          translator_id?: string | null
-          created_at?: string
-          updated_at?: string
-          file_url?: string
-          file_size?: number
-        }
-      }
-      translations: {
-        Row: {
-          id: string
-          document_id: string
-          source_text: string
-          target_text: string
-          status: string
-          confidence_score: number
-          created_at: string
-          updated_at: string
-          translator_id: string | null
-          reviewer_id: string | null
-        }
-        Insert: {
-          id?: string
-          document_id: string
-          source_text: string
-          target_text: string
-          status?: string
-          confidence_score?: number
-          created_at?: string
-          updated_at?: string
-          translator_id?: string | null
-          reviewer_id?: string | null
-        }
-        Update: {
-          id?: string
-          document_id?: string
-          source_text?: string
-          target_text?: string
-          status?: string
-          confidence_score?: number
-          created_at?: string
-          updated_at?: string
-          translator_id?: string | null
-          reviewer_id?: string | null
-        }
-      }
-      team_members: {
+      project_members: {
         Row: {
           id: string
           project_id: string
@@ -154,6 +124,88 @@ export interface Database {
           project_id?: string
           user_id?: string
           role?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      documents: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          source_language: string
+          target_language: string
+          status: string
+          progress: number
+          translator_id: string | null
+          file_url: string
+          file_size: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          source_language: string
+          target_language: string
+          status?: string
+          progress?: number
+          translator_id?: string | null
+          file_url: string
+          file_size: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          name?: string
+          source_language?: string
+          target_language?: string
+          status?: string
+          progress?: number
+          translator_id?: string | null
+          file_url?: string
+          file_size?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      translations: {
+        Row: {
+          id: string
+          document_id: string
+          source_text: string
+          target_text: string
+          status: string
+          confidence_score: number
+          translator_id: string | null
+          reviewer_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          document_id: string
+          source_text: string
+          target_text: string
+          status?: string
+          confidence_score?: number
+          translator_id?: string | null
+          reviewer_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          document_id?: string
+          source_text?: string
+          target_text?: string
+          status?: string
+          confidence_score?: number
+          translator_id?: string | null
+          reviewer_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -183,6 +235,35 @@ export interface Database {
           full_name?: string
           avatar_url?: string | null
           preferred_language?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      settings: {
+        Row: {
+          id: string
+          user_id: string
+          openai_api_key: string | null
+          openai_model: string | null
+          openai_base_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          openai_api_key?: string | null
+          openai_model?: string | null
+          openai_base_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          openai_api_key?: string | null
+          openai_model?: string | null
+          openai_base_url?: string | null
           created_at?: string
           updated_at?: string
         }
