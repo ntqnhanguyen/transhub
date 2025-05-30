@@ -3,6 +3,7 @@ import { X, Languages, Copy, Check, RotateCcw, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { translateText } from '../../lib/openai';
+import { useNavigate } from 'react-router-dom';
 
 interface QuickTranslateModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
   const [isTranslating, setIsTranslating] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -93,6 +95,10 @@ export function QuickTranslateModal({ isOpen, onClose }: QuickTranslateModalProp
       if (translationError) throw translationError;
 
       setTranslatedText(translatedContent);
+      
+      // Navigate to Text Translation page after successful translation
+      onClose();
+      navigate('/text-translation');
     } catch (error) {
       console.error('Error performing quick translation:', error);
     } finally {
