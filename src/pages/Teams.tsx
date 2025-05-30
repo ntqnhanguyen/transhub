@@ -101,23 +101,24 @@ export default function Teams() {
       }
 
       // Fetch full team details using the combined team IDs
-      // const { data: teamsData, error: teamsError } = await supabase
-      //   .from('teams')
-      //   .select(`
-      //     *,
-      //     team_members (
-      //       id,
-      //       role,
-      //       user_profiles(
-      //         user_id,
-      //         full_name,
-      //         avatar_url,
-      //         email
-      //       )
-      //     )
-      //   `)
-      //   .in('id', teamIds)
-      //   .order('created_at', { ascending: false });
+      
+      const { data: teamsData, error: teamsError } = await supabase
+        .from('teams')
+        .select(`
+          *,
+          team_members (
+            id,
+            role,
+            user_profiles(
+              user_id,
+              full_name,
+              avatar_url,
+              email
+            )
+          )
+        `)
+        .in('id', teamIds)
+        .order('created_at', { ascending: false });
       
 
       if (teamsError) throw teamsError;
