@@ -77,16 +77,12 @@ export default function Teams() {
         .from('teams')
         .select(`
           *,
-          team_members (
+          team_members!inner (
             id,
             role,
-            user:user_id (
-              id,
-              email,
-              profile:user_profiles!inner (
-                full_name,
-                avatar_url
-              )
+            user_profiles!inner (
+              full_name,
+              avatar_url
             )
           )
         `)
@@ -120,6 +116,7 @@ export default function Teams() {
         })
         .select()
         .single();
+
       if (teamError) throw teamError;
 
       // Add creator as team owner
@@ -149,11 +146,20 @@ export default function Teams() {
     try {
       setError('');
       
+      // First get the user profile for the invited email
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('email', inviteData.email)
+        .single();
+
+      if (profileError) throw new Error('User not found');
+
       const { error: memberError } = await supabase
         .from('team_members')
         .insert({
           team_id: selectedTeam.id,
-          user_id: user.id,
+          user_id: userProfile.user_id,
           role: inviteData.role
         });
 
@@ -244,10 +250,10 @@ export default function Teams() {
                       <div key={member.id} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                            {member.user.profile.full_name[0]}
+                            {member.user_profiles.full_name[0]}
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm font-medium">{member.user.profile.full_name}</p>
+                            <p className="text-sm font-medium">{member.user_profiles.full_name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{member.role}</p>
                           </div>
                         </div>

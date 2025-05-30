@@ -40,7 +40,7 @@ export interface Database {
           id: string
           team_id: string
           user_id: string
-          role: string
+          role: Database["public"]["Enums"]["team_role"]
           created_at: string
           updated_at: string
         }
@@ -48,7 +48,7 @@ export interface Database {
           id?: string
           team_id: string
           user_id: string
-          role: string
+          role: Database["public"]["Enums"]["team_role"]
           created_at?: string
           updated_at?: string
         }
@@ -56,7 +56,7 @@ export interface Database {
           id?: string
           team_id?: string
           user_id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["team_role"]
           created_at?: string
           updated_at?: string
         }
@@ -69,7 +69,7 @@ export interface Database {
           source_language: string
           target_languages: string[]
           progress: number
-          status: string
+          status: Database["public"]["Enums"]["project_status"]
           owner_id: string
           due_date: string | null
           created_at: string
@@ -82,7 +82,7 @@ export interface Database {
           source_language: string
           target_languages: string[]
           progress?: number
-          status?: string
+          status?: Database["public"]["Enums"]["project_status"]
           owner_id: string
           due_date?: string | null
           created_at?: string
@@ -95,7 +95,7 @@ export interface Database {
           source_language?: string
           target_languages?: string[]
           progress?: number
-          status?: string
+          status?: Database["public"]["Enums"]["project_status"]
           owner_id?: string
           due_date?: string | null
           created_at?: string
@@ -107,7 +107,7 @@ export interface Database {
           id: string
           project_id: string
           user_id: string
-          role: string
+          role: Database["public"]["Enums"]["team_role"]
           created_at: string
           updated_at: string
         }
@@ -115,7 +115,7 @@ export interface Database {
           id?: string
           project_id: string
           user_id: string
-          role: string
+          role: Database["public"]["Enums"]["team_role"]
           created_at?: string
           updated_at?: string
         }
@@ -123,7 +123,7 @@ export interface Database {
           id?: string
           project_id?: string
           user_id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["team_role"]
           created_at?: string
           updated_at?: string
         }
@@ -135,7 +135,7 @@ export interface Database {
           name: string
           source_language: string
           target_language: string
-          status: string
+          status: Database["public"]["Enums"]["document_status"]
           progress: number
           translator_id: string | null
           file_url: string
@@ -149,7 +149,7 @@ export interface Database {
           name: string
           source_language: string
           target_language: string
-          status?: string
+          status?: Database["public"]["Enums"]["document_status"]
           progress?: number
           translator_id?: string | null
           file_url: string
@@ -163,7 +163,7 @@ export interface Database {
           name?: string
           source_language?: string
           target_language?: string
-          status?: string
+          status?: Database["public"]["Enums"]["document_status"]
           progress?: number
           translator_id?: string | null
           file_url?: string
@@ -178,7 +178,7 @@ export interface Database {
           document_id: string
           source_text: string
           target_text: string
-          status: string
+          status: Database["public"]["Enums"]["translation_status"]
           confidence_score: number
           translator_id: string | null
           reviewer_id: string | null
@@ -190,7 +190,7 @@ export interface Database {
           document_id: string
           source_text: string
           target_text: string
-          status?: string
+          status?: Database["public"]["Enums"]["translation_status"]
           confidence_score?: number
           translator_id?: string | null
           reviewer_id?: string | null
@@ -202,7 +202,7 @@ export interface Database {
           document_id?: string
           source_text?: string
           target_text?: string
-          status?: string
+          status?: Database["public"]["Enums"]["translation_status"]
           confidence_score?: number
           translator_id?: string | null
           reviewer_id?: string | null
@@ -268,6 +268,12 @@ export interface Database {
           updated_at?: string
         }
       }
+    }
+    Enums: {
+      project_status: "draft" | "active" | "completed" | "archived"
+      document_status: "queued" | "in_progress" | "in_review" | "completed"
+      translation_status: "pending" | "in_progress" | "in_review" | "completed"
+      team_role: "owner" | "admin" | "translator" | "reviewer"
     }
   }
 }
