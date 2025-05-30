@@ -120,7 +120,7 @@ export default function Teams() {
         })
         .select()
         .single();
-
+      console.log(teamError)
       if (teamError) throw teamError;
 
       // Add creator as team owner
