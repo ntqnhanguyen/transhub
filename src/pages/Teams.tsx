@@ -175,14 +175,13 @@ if (teamsError) {
       user_profiles: profilesMap[member.user_id] || null
     }))
   }));
-      teamsData = enrichedTeamsData
       // if (teamsError) throw teamsError;
 
       if (!teamsData) {
         throw new Error('No teams data received');
       }
 
-      setTeams(teamsData);
+      setTeams(enrichedTeamsData);
     } catch (err) {
       console.error('Error fetching teams:', err);
       setError('Failed to load teams');
