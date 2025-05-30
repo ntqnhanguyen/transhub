@@ -41,7 +41,10 @@ export default function Dashboard() {
             team_members!inner(user_id),
             documents(count)
           `)
-          .or(`owner_id.eq."${user.id}",team_members.user_id.eq."${user.id}"`)
+          .or([
+            `owner_id.eq.${user.id}`,
+            `team_members.user_id.eq.${user.id}`
+          ])
           .order('created_at', { ascending: false });
 
         // Fetch recent documents
@@ -56,7 +59,10 @@ export default function Dashboard() {
             ),
             translations(count)
           `)
-          .or(`projects.owner_id.eq."${user.id}",projects.team_members.user_id.eq."${user.id}"`)
+          .or([
+            `projects.owner_id.eq.${user.id}`,
+            `projects.team_members.user_id.eq.${user.id}`
+          ])
           .order('updated_at', { ascending: false })
           .limit(5);
 
@@ -74,7 +80,10 @@ export default function Dashboard() {
               owner_id
             )
           `)
-          .or(`user_id.eq."${user.id}",projects.owner_id.eq."${user.id}"`)
+          .or([
+            `user_id.eq.${user.id}`,
+            `projects.owner_id.eq.${user.id}`
+          ])
           .order('updated_at', { ascending: false })
           .limit(4);
 
@@ -99,8 +108,8 @@ export default function Dashboard() {
           totalLanguages: uniqueLanguages.size,
           newLanguages: recentLanguages.size,
           teamMembers: teamMembers?.length || 0,
-          pendingInvitations: 2, // This would come from a separate invitations table
-          timeSaved: 43, // This would be calculated based on translation metrics
+          pendingInvitations: 2,
+          timeSaved: 43,
           projects: projects || [],
           recentDocuments: documents || [],
           teamActivity: teamMembers || []
