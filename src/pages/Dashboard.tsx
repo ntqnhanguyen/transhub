@@ -33,7 +33,27 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        // Fetch projects where user is owner or team member
+        // First, get project IDs where user is a team member
+        const { data: teamMemberProjects } = await supabase
+          .from('team_members')
+          .select('project_id')
+          .eq('user_id', user.id);
+
+        // Get project IDs where user is the owner
+        const { data: ownedProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('owner_id', user.id);
+
+        // Combine and deduplicate project IDs
+        const projectIds = [
+          ...new Set([
+            ...(teamMemberProjects?.map(p => p.project_id) || []),
+            ...(ownedProjects?.map(p => p.id) || [])
+          ])
+        ];
+
+        // Fetch projects using the combined project IDs
         const { data: projects } = await supabase
           .from('projects')
           .select(`
@@ -41,10 +61,10 @@ export default function Dashboard() {
             team_members!inner(user_id),
             documents(count)
           `)
-          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
+          .in('id', projectIds)
           .order('created_at', { ascending: false });
 
-        // Fetch recent documents
+        // Fetch recent documents for these projects
         const { data: documents } = await supabase
           .from('documents')
           .select(`
@@ -56,17 +76,9 @@ export default function Dashboard() {
             ),
             translations(count)
           `)
-          .or(`project.owner_id.eq.${user.id},project.team_members.user_id.eq.${user.id}`)
+          .in('project_id', projectIds)
           .order('updated_at', { ascending: false })
           .limit(5);
-
-        // First get all projects where the user is involved
-        const { data: userProjects } = await supabase
-          .from('projects')
-          .select('id')
-          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`);
-
-        const projectIds = userProjects?.map(p => p.id) || [];
 
         // Only fetch team members if we have projects
         let teamMembers = [];

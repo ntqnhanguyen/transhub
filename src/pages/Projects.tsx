@@ -44,7 +44,35 @@ export default function Projects() {
 
     const fetchProjects = async () => {
       try {
-        const { data, error } = await supabase
+        // First, get project IDs where user is a team member
+        const { data: teamMemberProjects } = await supabase
+          .from('team_members')
+          .select('project_id')
+          .eq('user_id', user.id);
+
+        // Get project IDs where user is the owner
+        const { data: ownedProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('owner_id', user.id);
+
+        // Combine and deduplicate project IDs
+        const projectIds = [
+          ...new Set([
+            ...(teamMemberProjects?.map(p => p.project_id) || []),
+            ...(ownedProjects?.map(p => p.id) || [])
+          ])
+        ];
+
+        // If no projects found, set empty array and return
+        if (projectIds.length === 0) {
+          setProjects([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch full project details using the combined project IDs
+        const { data, error: projectsError } = await supabase
           .from('projects')
           .select(`
             *,
@@ -54,10 +82,10 @@ export default function Projects() {
             ),
             documents(count)
           `)
-          .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
+          .in('id', projectIds)
           .order('updated_at', { ascending: false });
 
-        if (error) throw error;
+        if (projectsError) throw projectsError;
 
         const projectsWithTeamSize = data.map(project => ({
           ...project,
@@ -291,6 +319,31 @@ export default function Projects() {
           // Refresh projects list after creating a new project
           if (user) {
             const fetchProjects = async () => {
+              // First, get project IDs where user is a team member
+              const { data: teamMemberProjects } = await supabase
+                .from('team_members')
+                .select('project_id')
+                .eq('user_id', user.id);
+
+              // Get project IDs where user is the owner
+              const { data: ownedProjects } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('owner_id', user.id);
+
+              // Combine and deduplicate project IDs
+              const projectIds = [
+                ...new Set([
+                  ...(teamMemberProjects?.map(p => p.project_id) || []),
+                  ...(ownedProjects?.map(p => p.id) || [])
+                ])
+              ];
+
+              if (projectIds.length === 0) {
+                setProjects([]);
+                return;
+              }
+
               const { data, error } = await supabase
                 .from('projects')
                 .select(`
@@ -301,7 +354,7 @@ export default function Projects() {
                   ),
                   documents(count)
                 `)
-                .or(`owner_id.eq.${user.id},team_members.user_id.eq.${user.id}`)
+                .in('id', projectIds)
                 .order('updated_at', { ascending: false });
 
               if (error) {
