@@ -9,7 +9,8 @@ import {
   Sun,
   CreditCard,
   Save,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +20,8 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const { user } = useAuth();
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   
   const [formData, setFormData] = useState({
     name: 'Alex Johnson',
@@ -37,11 +40,16 @@ export default function Settings() {
     if (user) {
       // Load settings from Supabase
       const loadSettings = async () => {
-        const { data: settings } = await supabase
+        const { data: settings, error } = await supabase
           .from('settings')
           .select('*')
           .eq('user_id', user.id)
           .single();
+
+        if (error) {
+          console.error('Error loading settings:', error);
+          return;
+        }
 
         if (settings) {
           setFormData(prev => ({
@@ -60,6 +68,9 @@ export default function Settings() {
   const handleSaveSettings = async () => {
     if (!user) return;
 
+    setSaveStatus('saving');
+    setErrorMessage('');
+
     try {
       const { error } = await supabase
         .from('settings')
@@ -71,10 +82,13 @@ export default function Settings() {
         });
 
       if (error) throw error;
-      alert('Settings saved successfully');
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Error saving settings');
+      setSaveStatus('error');
+      setErrorMessage('Failed to save settings. Please try again.');
     }
   };
   
@@ -592,7 +606,8 @@ export default function Settings() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              <button className="text-blue-600 dark:text-blue-400 hover:underline">
+                              <button className="text-blue-600 dark:text-blue-400 hover:under
+line">
                                 Download
                               </button>
                             </td>
@@ -624,6 +639,20 @@ export default function Settings() {
                 <h2 className="text-xl font-semibold mb-4">API Settings</h2>
                 
                 <div className="space-y-4 max-w-md">
+                  {saveStatus === 'error' && (
+                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start">
+                      <AlertCircle className="text-red-500 mt-0.5 mr-2" size={16} />
+                      <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+                    </div>
+                  )}
+
+                  {saveStatus === 'success' && (
+                    <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-start">
+                      <Check className="text-green-500 mt-0.5 mr-2" size={16} />
+                      <p className="text-sm text-green-700 dark:text-green-300">Settings saved successfully!</p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       OpenAI API Key
@@ -641,13 +670,16 @@ export default function Settings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       OpenAI Model
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.openaiModel}
                       onChange={(e) => setFormData({ ...formData, openaiModel: e.target.value })}
                       className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
-                      placeholder="openai/gpt-4.1-nano"
-                    />
+                    >
+                      <option value="text-davinci-003">text-davinci-003</option>
+                      <option value="text-curie-001">text-curie-001</option>
+                      <option value="text-babbage-001">text-babbage-001</option>
+                      <option value="text-ada-001">text-ada-001</option>
+                    </select>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Select a text-only model for translations
                     </p>
@@ -672,10 +704,17 @@ export default function Settings() {
                   <div>
                     <button
                       onClick={handleSaveSettings}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center"
+                      disabled={saveStatus === 'saving'}
+                      className={`
+                        px-4 py-2 rounded-lg transition-colors duration-200 flex items-center
+                        ${saveStatus === 'saving'
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700'}
+                        text-white
+                      `}
                     >
                       <Save size={16} className="mr-2" />
-                      Save API Settings
+                      {saveStatus === 'saving' ? 'Saving...' : 'Save API Settings'}
                     </button>
                   </div>
                 </div>
