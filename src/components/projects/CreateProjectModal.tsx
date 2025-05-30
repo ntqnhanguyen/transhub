@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Languages, Globe, UserPlus, Trash2, Mail, Shield, Edit3, Eye } from 'lucide-react';
+import { X, Plus, Languages, Globe } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,11 +7,6 @@ import { useNavigate } from 'react-router-dom';
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface TeamMember {
-  email: string;
-  role: 'owner' | 'admin' | 'translator' | 'reviewer';
 }
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
@@ -22,11 +17,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     targetLanguages: [] as string[],
     dueDate: ''
   });
-  
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [newMemberEmail, setNewMemberEmail] = useState('');
-  const [newMemberRole, setNewMemberRole] = useState<TeamMember['role']>('translator');
-  
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,53 +36,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     { code: 'ar', name: 'Arabic', flag: 'sa' },
     { code: 'vi', name: 'Vietnamese', flag: 'vn' }
   ];
-
-  const handleAddMember = () => {
-    if (!newMemberEmail || teamMembers.some(member => member.email === newMemberEmail)) {
-      return;
-    }
-    
-    setTeamMembers([...teamMembers, { email: newMemberEmail, role: newMemberRole }]);
-    setNewMemberEmail('');
-    setNewMemberRole('translator');
-  };
-
-  const handleRemoveMember = (email: string) => {
-    setTeamMembers(teamMembers.filter(member => member.email !== email));
-  };
-
-  const getRoleBadge = (role: TeamMember['role']) => {
-    switch (role) {
-      case 'owner':
-        return (
-          <span className="flex items-center bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs px-2 py-1 rounded-full">
-            <Shield size={12} className="mr-1" />
-            Owner
-          </span>
-        );
-      case 'admin':
-        return (
-          <span className="flex items-center bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 text-xs px-2 py-1 rounded-full">
-            <Shield size={12} className="mr-1" />
-            Admin
-          </span>
-        );
-      case 'translator':
-        return (
-          <span className="flex items-center bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs px-2 py-1 rounded-full">
-            <Edit3 size={12} className="mr-1" />
-            Translator
-          </span>
-        );
-      case 'reviewer':
-        return (
-          <span className="flex items-center bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-xs px-2 py-1 rounded-full">
-            <Eye size={12} className="mr-1" />
-            Reviewer
-          </span>
-        );
-    }
-  };
 
   const handleCreate = async () => {
     if (!user) return;
@@ -119,31 +62,16 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
       if (projectError) throw projectError;
 
-      // Create team member entries
-      const teamMemberPromises = [
-        // Add owner
-        supabase.from('team_members').insert({
+      // Create team member entry for the owner
+      const { error: teamError } = await supabase
+        .from('team_members')
+        .insert({
           project_id: project.id,
           user_id: user.id,
           role: 'owner'
-        }),
-        // Add invited members
-        ...teamMembers.map(member => 
-          supabase.from('team_members').insert({
-            project_id: project.id,
-            email: member.email,
-            role: member.role,
-            status: 'pending'
-          })
-        )
-      ];
+        });
 
-      const results = await Promise.all(teamMemberPromises);
-      const errors = results.filter(result => result.error);
-
-      if (errors.length > 0) {
-        throw new Error('Failed to add some team members');
-      }
+      if (teamError) throw teamError;
 
       onClose();
       // Reset form
@@ -154,7 +82,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
         targetLanguages: [],
         dueDate: ''
       });
-      setTeamMembers([]);
     } catch (error: any) {
       console.error('Error creating project:', error);
       setError(error.message || 'Failed to create project');
@@ -308,90 +235,6 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Team Members */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Team Members</h3>
-              
-              {/* Current user (owner) */}
-              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-750 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center font-medium">
-                      {user?.email?.[0].toUpperCase()}
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium">{user?.email}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Project Owner</p>
-                    </div>
-                  </div>
-                  {getRoleBadge('owner')}
-                </div>
-              </div>
-
-              {/* Invite members */}
-              <div className="space-y-4">
-                <div className="flex space-x-3">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <input
-                        type="email"
-                        value={newMemberEmail}
-                        onChange={(e) => setNewMemberEmail(e.target.value)}
-                        placeholder="Enter email address"
-                        className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-blue-500"
-                      />
-                      <Mail className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                    </div>
-                  </div>
-                  <select
-                    value={newMemberRole}
-                    onChange={(e) => setNewMemberRole(e.target.value as TeamMember['role'])}
-                    className="bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="translator">Translator</option>
-                    <option value="reviewer">Reviewer</option>
-                  </select>
-                  <button
-                    onClick={handleAddMember}
-                    disabled={!newMemberEmail}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <UserPlus size={18} className="mr-2" />
-                    Add
-                  </button>
-                </div>
-
-                {/* Invited members list */}
-                {teamMembers.length > 0 && (
-                  <div className="space-y-2">
-                    {teamMembers.map((member, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 rounded-lg">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center font-medium">
-                            {member.email[0].toUpperCase()}
-                          </div>
-                          <div className="ml-3">
-                            <p className="font-medium">{member.email}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Pending invitation</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          {getRoleBadge(member.role)}
-                          <button
-                            onClick={() => handleRemoveMember(member.email)}
-                            className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
