@@ -45,7 +45,35 @@ export default function Teams() {
 
   const fetchTeams = async () => {
     try {
-      const { data, error } = await supabase
+      // First get teams where user is a member
+      const { data: memberTeams } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user?.id);
+
+      // Get teams where user is the owner
+      const { data: ownedTeams } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('owner_id', user?.id);
+
+      // Combine and deduplicate team IDs
+      const teamIds = [
+        ...new Set([
+          ...(memberTeams?.map(t => t.team_id) || []),
+          ...(ownedTeams?.map(t => t.id) || [])
+        ])
+      ];
+
+      // If no teams found, set empty array and return
+      if (teamIds.length === 0) {
+        setTeams([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch full team details using the combined team IDs
+      const { data: teamsData, error: teamsError } = await supabase
         .from('teams')
         .select(`
           *,
@@ -62,16 +90,18 @@ export default function Teams() {
             )
           ),
           team_invitations (
+            id,
             email,
             role,
             status,
             created_at
           )
         `)
+        .in('id', teamIds)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTeams(data || []);
+      if (teamsError) throw teamsError;
+      setTeams(teamsData || []);
     } catch (err) {
       console.error('Error fetching teams:', err);
       setError('Failed to load teams');
@@ -202,7 +232,7 @@ export default function Teams() {
           >
             <div className="p-4">
               <div className="flex justify-between items-start mb-3">
-                <h3  className="font-semibold">{team.name}</h3>
+                <h3 className="font-semibold">{team.name}</h3>
                 <button 
                   onClick={() => handleDeleteTeam(team.id)}
                   className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
@@ -241,7 +271,7 @@ export default function Teams() {
                     {team.team_invitations
                       .filter((invite: any) => invite.status === 'pending')
                       .map((invite: any) => (
-                        <div key={invite.email} className="flex items-center justify-between">
+                        <div key={invite.id} className="flex items-center justify-between">
                           <div className="flex items-center">
                             <Mail size={16} className="text-gray-400 mr-2" />
                             <div>
