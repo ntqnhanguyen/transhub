@@ -35,14 +35,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    if (error) throw error;
+    
+    if (authError) throw authError;
+    
+    if (authData.user) {
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          user_id: authData.user.id,
+          full_name: email.split('@')[0], // Default name from email
+          email: email,
+          preferred_language: 'en'
+        });
+      
+      if (profileError) {
+        // If profile creation fails, delete the auth user
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error('Failed to create user profile');
+      }
+    }
   };
 
   const signIn = async (email: string, password: string) => {
