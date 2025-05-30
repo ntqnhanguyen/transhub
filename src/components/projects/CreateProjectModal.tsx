@@ -62,16 +62,16 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
       if (projectError) throw projectError;
 
-      // Create team member entry for the owner
-      const { error: teamError } = await supabase
-        .from('team_members')
+      // Create project member entry for the owner
+      const { error: memberError } = await supabase
+        .from('project_members')
         .insert({
           project_id: project.id,
           user_id: user.id,
           role: 'owner'
         });
 
-      if (teamError) throw teamError;
+      if (memberError) throw memberError;
 
       onClose();
       // Reset form
