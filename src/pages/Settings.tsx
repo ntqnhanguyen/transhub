@@ -10,7 +10,9 @@ import {
   CreditCard,
   Save,
   Check,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -22,17 +24,18 @@ export default function Settings() {
   const { user } = useAuth();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@company.com',
-    company: 'Acme Inc.',
+    name: '',
+    email: '',
+    company: '',
     language: 'en',
     emailNotifications: true,
     projectUpdates: true,
     teamChanges: true,
     openaiApiKey: '',
-    openaiModel: 'text-davinci-003',
+    openaiModel: '',
     openaiBaseUrl: ''
   });
 
@@ -40,24 +43,39 @@ export default function Settings() {
     if (user) {
       // Load settings from Supabase
       const loadSettings = async () => {
-        const { data: settings, error } = await supabase
-          .from('settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        try {
+          // First try to get existing settings
+          const { data: settings, error: settingsError } = await supabase
+            .from('settings')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
 
-        if (error) {
+          if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            throw settingsError;
+          }
+
+          if (settings) {
+            setFormData(prev => ({
+              ...prev,
+              openaiApiKey: settings.openai_api_key || '',
+              openaiModel: settings.openai_model || 'gpt-3.5-turbo',
+              openaiBaseUrl: settings.openai_base_url || ''
+            }));
+          } else {
+            // Create default settings if none exist
+            const { error: createError } = await supabase
+              .from('settings')
+              .insert({
+                user_id: user.id,
+                openai_model: 'gpt-3.5-turbo'
+              });
+
+            if (createError) throw createError;
+          }
+        } catch (error) {
           console.error('Error loading settings:', error);
-          return;
-        }
-
-        if (settings) {
-          setFormData(prev => ({
-            ...prev,
-            openaiApiKey: settings.openai_api_key || '',
-            openaiModel: settings.openai_model || 'text-davinci-003',
-            openaiBaseUrl: settings.openai_base_url || ''
-          }));
+          setErrorMessage('Failed to load settings');
         }
       };
 
@@ -77,7 +95,7 @@ export default function Settings() {
         .upsert({
           user_id: user.id,
           openai_api_key: formData.openaiApiKey,
-          openai_model: formData.openaiModel,
+          openai_model: formData.openaiModel || 'gpt-3.5-turbo',
           openai_base_url: formData.openaiBaseUrl
         });
 
@@ -656,13 +674,22 @@ export default function Settings() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       OpenAI API Key
                     </label>
-                    <input
-                      type="password"
-                      value={formData.openaiApiKey}
-                      onChange={(e) => setFormData({ ...formData, openaiApiKey: e.target.value })}
-                      className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
-                      placeholder="sk-..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={showApiKey ? 'text' : 'password'}
+                        value={formData.openaiApiKey}
+                        onChange={(e) => setFormData({ ...formData, openaiApiKey: e.target.value })}
+                        className="w-full bg-gray-100 dark:bg-gray-700 border-0 rounded-lg py-2 pl-3 pr-10 focus:ring-2 focus:ring-blue-500"
+                        placeholder="sk-..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-2 top-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
