@@ -83,7 +83,6 @@ export default function Dashboard() {
         // Only fetch project members if we have projects
         let projectMembers = [];
         if (projectIds.length > 0) {
-          // First, fetch project members data
           const { data: projectMembersData } = await supabase
             .from('project_members')
             .select(`
@@ -91,34 +90,18 @@ export default function Dashboard() {
               project:projects!inner(
                 name,
                 owner_id
+              ),
+              user_profiles!inner(
+                full_name,
+                avatar_url,
+                email
               )
             `)
             .in('project_id', projectIds)
             .order('updated_at', { ascending: false })
             .limit(4);
-
-          if (projectMembersData && projectMembersData.length > 0) {
-            // Get unique user IDs from project members
-            const userIds = [...new Set(projectMembersData.map(pm => pm.user_id))];
-            
-            // Fetch user profiles separately
-            const { data: userProfiles } = await supabase
-              .from('user_profiles')
-              .select('user_id, full_name, avatar_url, email')
-              .in('user_id', userIds);
-
-            // Create a map of user profiles for easy lookup
-            const userProfileMap = {};
-            userProfiles?.forEach(profile => {
-              userProfileMap[profile.user_id] = profile;
-            });
-
-            // Manually join the data
-            projectMembers = projectMembersData.map(member => ({
-              ...member,
-              user_profiles: userProfileMap[member.user_id] || null
-            }));
-          }
+          
+          projectMembers = projectMembersData || [];
         }
 
         // Calculate statistics
